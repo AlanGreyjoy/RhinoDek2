@@ -1,0 +1,36 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="RhinoDek2" GeneratedClassName="MainSettingsFile">
+  <Profiles />
+  <Settings>
+    <Setting Name="Store_Theme_Name" Type="System.String" Scope="User">
+      <Value Profile="(Default)">"Windows8"</Value>
+    </Setting>
+    <Setting Name="Background" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CAD_Drive" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Null</Value>
+    </Setting>
+    <Setting Name="Public_Drive" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Null</Value>
+    </Setting>
+    <Setting Name="CNC_Drive" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Null</Value>
+    </Setting>
+    <Setting Name="Title_Font_Color" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">Gray</Value>
+    </Setting>
+    <Setting Name="Tile_Font_Family" Type="System.Drawing.Font" Scope="User">
+      <Value Profile="(Default)">Segoe UI, 12pt</Value>
+    </Setting>
+    <Setting Name="Background_Color" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)">White</Value>
+    </Setting>
+    <Setting Name="PaperPrinterName" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="PDFPrinterName" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>
