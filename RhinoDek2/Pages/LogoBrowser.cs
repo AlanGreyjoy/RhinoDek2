@@ -294,7 +294,7 @@ namespace RhinoDek2.Pages
                                     logoImage = Image.FromFile(row["Logo_Image_Path"].ToString());
                                 }
 
-                                dataSource.Add(new Logo(1, row["Logo_Name"].ToString(), row["Drawn_By"].ToString(), row["Logo_Group"].ToString(), row["Description"].ToString(), row["Logo_Image_Path"].ToString(), false, false, false, false));
+                                dataSource.Add(new Logo(1, row["Logo_Name"].ToString(), row["Drawn_By"].ToString(), row["Logo_Group"].ToString(), row["Description"].ToString(), row["Logo_Image_Path"].ToString(), false, false, false, false, false, "", ""));
 
                                 page.Controls.Add(listView);
                                 storeLogo.Rows.Add(row["Drawn_By"].ToString(), row["Description"].ToString());
@@ -320,12 +320,25 @@ namespace RhinoDek2.Pages
         void Logo_VisualItemFormatting(object sender, ListViewVisualItemEventArgs e)
         {
             e.VisualItem.ImageLayout = ImageLayout.Zoom;
+            string approved;
 
-            //string drawnBy = ((RhinoDekDataSet.Logo_BrowserRow)(((DataRowView)(e.VisualItem.Data.DataBoundItem)).Row)).Drawn_By;
+            if (((Logo)e.VisualItem.Data.DataBoundItem).Approved)
+            {
+                approved = "Yes";
+            }
+            else
+            {
+                approved = "No";
+            }
+
             string drawnBy = ((Logo)e.VisualItem.Data.DataBoundItem).DrawnBy;
             string logoName = ((Logo)e.VisualItem.Data.DataBoundItem).LogoName;
             string logoDescription = ((Logo)e.VisualItem.Data.DataBoundItem).LogoDescription;
-            e.VisualItem.Text = "<html><b>" + logoName + "</b><br><span style=\"color:#999999\"><b>Drawn By </b>" + drawnBy + "<br><b>Description </b>" + logoDescription + "</span>";
+            string approvedBy = ((Logo)e.VisualItem.Data.DataBoundItem).ApprovedBy;
+            
+            
+            e.VisualItem.Text = "<html><b>" + logoName + "</b><br><span style=\"color:#999999\"><b>Drawn By </b>" + drawnBy + "<br><b>Description </b>" + logoDescription + 
+                "<br>" + "<b>Approved</b>" + approved + "<br>" + "<b>Approved By </b>" + approvedBy + "</span>";
         }
 
         #endregion
@@ -351,9 +364,13 @@ namespace RhinoDek2.Pages
         private bool _threeSixteenth;
         private bool _forth;
         private bool _laser;
+        private bool _approved;
+        private string _approvedBy;
+        private string _logoFilePath;
 
         public Logo(int LogoID, string LogoName, string DrawnBy, string LogoGroup, string LogoDescription,
-            string LogoImagePath, bool Eight, bool ThreeSixteenth, bool Forth, bool Laser)
+            string LogoImagePath, bool Eight, bool ThreeSixteenth, bool Forth, bool Laser, bool approved,
+            string approvedBy, string logoFilePath)
         {
             _logoID = LogoID;
             _logoName = LogoName;
@@ -475,6 +492,54 @@ namespace RhinoDek2.Pages
                 {
                     _eigth = value;
                     OnPropertyChanged("1/8");
+                }
+            }
+        }
+
+        public bool Approved
+        {
+            get
+            {
+                return _approved;
+            }
+            set
+            {
+                if (_approved != value)
+                {
+                    _approved = value;
+                    OnPropertyChanged("Approved_Bool");
+                }
+            }
+        }
+
+        public string ApprovedBy
+        {
+            get
+            {
+                return _approvedBy;
+            }
+            set
+            {
+                if (_approvedBy != value)
+                {
+                    _approvedBy = value;
+                    OnPropertyChanged("Approved_By");
+                }
+            }
+        }
+
+        public string LogoFilePath
+        {
+            get
+            {
+                return _logoFilePath;
+            }
+            set
+            {
+                if (_logoFilePath != value)
+                {
+                    _logoFilePath = value;
+                    OnPropertyChanged("Logo_File_Path");
                 }
             }
         }
