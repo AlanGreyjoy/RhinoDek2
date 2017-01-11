@@ -12,6 +12,7 @@ using System.Diagnostics;
 using Rhino;
 using RhinoScript4;
 using System.IO;
+using Telerik.WinForms.RichTextEditor.RichTextBoxUI.Menus;
 
 namespace RhinoDek2.Pages
 {
@@ -27,10 +28,14 @@ namespace RhinoDek2.Pages
         DataTable storeLogo = new DataTable();
         DataSet logoDataSet = new DataSet();
 
+        RadPageViewPage currentPage;
+        RadListView currentListView;
+        List<RadListView> listViews = new List<RadListView>();
+
         //Main Invoke\\
         public LogoBrowser()
         {
-            
+
             InitializeComponent();
             if (Classes.StaticData.Logo_Group_Names != null)
             {
@@ -38,6 +43,7 @@ namespace RhinoDek2.Pages
                 {
                     RadPageViewPage newPage = new RadPageViewPage();
                     newPage.Text = name;
+                    newPage.Name = name;
                     radPageView1.Pages.Insert(1, newPage);
                     DescriptionTextListDataItem item = new DescriptionTextListDataItem();
                     item.Text = name;
@@ -51,6 +57,7 @@ namespace RhinoDek2.Pages
             rs = (IRhinoScript)obj;
 
             CreateContextMenu();
+            ContextMenu_RemoveLogo();
             Populate_Groups_With_Logos();
 
         }
@@ -100,6 +107,7 @@ namespace RhinoDek2.Pages
             radContextMenu1.Items.Add(removeGroupTab);
         }
 
+        //Removing a Group\\
         private void Remove_Group_Click(object sender, EventArgs e)
         {
             DialogResult result = MessageBox.Show(this,
@@ -115,7 +123,7 @@ namespace RhinoDek2.Pages
                 try
                 {
                     DataRow[] foundRows;
-                    foundRows = rhinoDekDataSet1.Tables["Logo_Groups"].Select(string.Format("Group_Name Like '{0}%'",radPageView1.SelectedPage.Text));
+                    foundRows = rhinoDekDataSet1.Tables["Logo_Groups"].Select(string.Format("Group_Name Like '{0}%'", radPageView1.SelectedPage.Text));
                     foreach (DataRow row in foundRows)
                     {
                         row.Delete();
@@ -147,9 +155,12 @@ namespace RhinoDek2.Pages
         void radPageView1_MouseClick(object sender, MouseEventArgs e)
         {
             RadPageViewItem hitItem = this.radPageView1.ViewElement.ItemFromPoint(e.Location);
+
             if (e.Button == MouseButtons.Right && hitItem != null)
             {
                 radPageView1.SelectedPage = hitItem.Page;
+                currentPage = hitItem.Page;
+                
                 if (radPageView1.SelectedPage.Text != "Add Logo" && radPageView1.SelectedPage.Text != "Add Group")
                 {
                     if (radPageView1.SelectedPage.Text != "Groups" && radPageView1.SelectedPage.Text != "Settings")
@@ -158,8 +169,15 @@ namespace RhinoDek2.Pages
                     }
                 }
             }
+            if (e.Button == MouseButtons.Left && hitItem != null)
+            {
+                currentPage = hitItem.Page;
+            }
         }
         #endregion
+
+
+        #region Choosing Logos and Submiting them and Editing Them and Inserting them
 
         //Submit Logo Click\\
         private void btnSubmitLogo_Click(object sender, EventArgs e)
@@ -178,7 +196,8 @@ namespace RhinoDek2.Pages
                 logoRow._1_4 = checkFourth.Checked;
                 logoRow._3_16 = checkThreeSixteenth.Checked;
                 logoRow.Laser = checkLaser.Checked;
-                logoRow.Logo_Image_Path = string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.png",dropDownGroups.Text, tbLogoName.Text);
+                logoRow.Logo_Image_Path = string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.png", dropDownGroups.Text, tbLogoName.Text);
+                logoRow.Logo_File_Path = string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.3dm", dropDownGroups.Text, tbLogoName.Text);
 
                 RhinoDekDataSetTableAdapters.Logo_BrowserTableAdapter ta = new RhinoDekDataSetTableAdapters.Logo_BrowserTableAdapter();
                 rhinoDekDataSet1.Logo_Browser.Rows.Add(logoRow);
@@ -186,7 +205,20 @@ namespace RhinoDek2.Pages
 
                 logoPictureBox.Image = null;
                 logoPictureBox.InitialImage = null;
-                File.Copy(string.Format(@"{0}\RhinoDek_Temp_Logo_Image.png", tempPath), string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.png",dropDownGroups.Text,tbLogoName.Text),true);
+                File.Copy(string.Format(@"{0}RhinoDek_Temp_Logo_Image.png", tempPath), string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.png", dropDownGroups.Text, tbLogoName.Text), true);
+                File.Copy(string.Format(@"{0}temp3dmfile.3dm", tempPath), string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.3dm", dropDownGroups.Text, tbLogoName.Text), true);
+
+                logoPictureBox.Image = null;
+                tbLogoName.Text = "";
+                tbDrawnBy.Text = "";
+                tbLogoGroupName.Text = "";
+                taDescription.Text = "";
+                checkEigth.Checked = false;
+                checkThreeSixteenth.Checked = false;
+                checkFourth.Checked = false;
+                checkLaser.Checked = false;
+
+                Populate_Groups_With_Logos();
             }
             catch (Exception ex)
             {
@@ -198,22 +230,32 @@ namespace RhinoDek2.Pages
                 return;
             }
 
-            //rs.Command(string.Format("_-Export _Pause {0} _Enter", path));
-
         }
 
         //Choose Logo Button Click\\
         private void btnAddBlock_Click(object sender, EventArgs e)
         {
             string tempPath = Path.GetTempPath();
+            string temp3DMpath = Path.GetTempPath();
 
-            logo = rs.GetObjects("Select the logo you wish to add. . .", 0, true,true,true);
+            logo = rs.GetObjects("Select the logo you wish to add. . .", 0, true, true, true);
+
             if (logo == null)
             {
                 rs.Print("There was no valid object selected. Please try again.");
                 return;
             }
+
             rs.Command("_Zoom _Selected");
+
+            if (File.Exists(temp3DMpath + @"\temp3dmfile.3dm"))
+            {
+                System.GC.Collect();
+                System.GC.WaitForPendingFinalizers();
+                File.Delete(temp3DMpath + @"\temp3dmfile.3dm");
+            }
+            rs.Command(string.Format("_-ExportWithOrigin _Pause _Pause {0}temp3dmfile.3dm _Enter", temp3DMpath));
+
             rs.UnselectAllObjects();
 
             if (File.Exists(tempPath + @"\RhinoDek_Temp_Logo_Image.png"))
@@ -233,22 +275,134 @@ namespace RhinoDek2.Pages
 
         }
 
+        //Edit Logo\\
+        private void Edit_Logo(object sender, EventArgs e)
+        {
+            //ListViewDataItem item = currentListView.SelectedItem as ListViewDataItem;
+            //item.Image = null;
+            //currentListView.Items.Remove(item);
+        }
+
+        //Inserting Logos into drawing\\
+        private void Insert_Logo(object sender, EventArgs e)
+        {
+            ListViewDataItem item = currentListView.SelectedItem as ListViewDataItem;
+            string rhinoFile = ((Logo)item.DataBoundItem).LogoFilePath;
+            string rhinoCommand = string.Format("_-Insert \"{0}\" _Enter _Enter _Pause _Enter _Enter", rhinoFile);
+            rs.Command(rhinoCommand, true);
+        }
+
+        #endregion
 
 
+        #region Removing Logos
+        //Context Menu for Logos\\
+        private void ContextMenu_RemoveLogo()
+        {
+            RadMenuItem insertLogo = new RadMenuItem();
+            insertLogo.Text = "Insert Logo";
+            insertLogo.Click += new EventHandler(Insert_Logo);
+            logoContextMenu.Items.Add(insertLogo);
+
+            RadMenuItem editLogo = new RadMenuItem();
+            editLogo.Text = "Edit Logo";
+            editLogo.Click += new EventHandler(Edit_Logo);
+            logoContextMenu.Items.Add(editLogo);
+
+            RadMenuItem removeLogo = new RadMenuItem();
+            removeLogo.Text = "Remove Logo";
+            removeLogo.Click += new EventHandler(Remove_Logo);
+            logoContextMenu.Items.Add(removeLogo);
+        }
+
+        //Remove Logo\\
+        void Remove_Logo(object sender, EventArgs e)
+        {
+            ListViewDataItem item = currentListView.SelectedItem as ListViewDataItem;
+            string logoName = ((Logo)item.DataBoundItem).LogoName;
+            string logoGroup = ((Logo)item.DataBoundItem).LogoGroup;
+
+            MessageBox.Show(logoName);
+
+            DialogResult result = MessageBox.Show(this,
+                "------*****------WARNNING!------*****------"
+                + Environment.NewLine
+                + Environment.NewLine +
+                "You are about to remove this logo and also remove the file associated with it!"
+                + Environment.NewLine
+                + Environment.NewLine +
+                "Are you sure you want to do this?", "RhinoDek Warnning - Group Removal", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk);
+
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    DataRow[] foundRows;
+                    foundRows = rhinoDekDataSet1.Tables["Logo_Browser"].Select(string.Format("Logo_Name Like '{0}%'", ((Logo)item.DataBoundItem).LogoName));
+                    foreach (DataRow row in foundRows)
+                    {
+                        row.Delete();
+                    }
+                    RhinoDekDataSetTableAdapters.Logo_BrowserTableAdapter ta = new RhinoDekDataSetTableAdapters.Logo_BrowserTableAdapter();
+                    ta.Update(rhinoDekDataSet1.Logo_Browser);
+                }
+                catch (Exception ex)
+                {
+                    RadDesktopAlert alert = new RadDesktopAlert();
+                    alert.CaptionText = "RhinoDek Database Error";
+                    alert.ContentText = "Logo could not be removed" + Environment.NewLine +
+                        ex.Message;
+                    alert.Show();
+                    return;
+                }
+
+                currentListView.Items.Remove(item);
+
+                if (File.Exists(string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.3dm", logoGroup, logoName)))
+                {
+                    System.GC.Collect();
+                    System.GC.WaitForPendingFinalizers();
+                    File.Delete(string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.3dm", logoGroup, logoName));
+                }
+                if (File.Exists(string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.png", logoGroup, logoName)))
+                {
+                    System.GC.Collect();
+                    System.GC.WaitForPendingFinalizers();
+                    File.Delete(string.Format(@"\\surfer\public\cad\rhinodek\logo_browser\groups\{0}\{1}.png", logoGroup, logoName));
+                }
+            }
+        }
+        
+        //Right Click in Logos\\
+        void LogoList_RightClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                currentListView = currentPage.Controls.Find(currentPage.Name, true).FirstOrDefault() as RadListView;
+                BaseListViewVisualItem item = currentListView.ElementTree.GetElementAtPoint(e.Location) as BaseListViewVisualItem;
+                if (item != null)
+                {
+                    currentListView.SelectedItem = item.Data;
+                    logoContextMenu.Show(currentListView.PointToScreen(e.Location));
+                }
+            }
+            
+        }
+
+        #endregion
 
 
         #region Populating Groups With Logos
 
         //Populating Groups with logos\\
-        Image logoImage;
         public void Populate_Groups_With_Logos()
         {
-
             RhinoDekDataSetTableAdapters.Logo_BrowserTableAdapter ta = new RhinoDekDataSetTableAdapters.Logo_BrowserTableAdapter();
+            ta.ClearBeforeFill = true;
             ta.Fill(rhinoDekDataSet1.Logo_Browser);
 
-            storeLogo.Columns.Add("DrawnBy", typeof(string));
-            storeLogo.Columns.Add("Description", typeof(string));
+            //storeLogo.Columns.Add("DrawnBy", typeof(string));
+            //storeLogo.Columns.Add("Description", typeof(string));
 
             foreach (RadPageViewPage page in radPageView1.Pages)
             {
@@ -256,6 +410,13 @@ namespace RhinoDek2.Pages
                 {
                     if (page.Text != "Add Logo" && page.Text != "Add Group")
                     {
+                        if (listViews.Count > 0)
+                        {
+                            foreach (RadListView view in listViews)
+                            {
+                                view.Controls.Remove(view);
+                            }
+                        }
                         DataTable table = rhinoDekDataSet1.Tables["Logo_Browser"];
                         string expression;
                         expression = string.Format("Logo_Group LIKE '%{0}%'", page.Text);
@@ -268,10 +429,15 @@ namespace RhinoDek2.Pages
 
                         listView.ItemDataBound += new ListViewItemEventHandler(Logo_ItemData);
                         listView.VisualItemFormatting += new ListViewVisualItemEventHandler(Logo_VisualItemFormatting);
+                        
+                        listView.MouseClick += new MouseEventHandler(LogoList_RightClick);
 
+                        //Setting up the Rad List View\\
                         listView.AllowEdit = false;
                         listView.AllowRemove = false;
                         listView.ItemSize = new Size(300, 128);
+                        listView.Padding = new Padding(5, 35, 5, 5);
+                        listView.ListViewElement.BorderColor = Color.Transparent;
                         listView.ViewType = ListViewType.ListView;
                         listView.Dock = DockStyle.Fill;
                         listView.DataSource = dataSource;
@@ -279,46 +445,84 @@ namespace RhinoDek2.Pages
                         listView.ValueMember = "Logo_Name";
                         currentListView = listView;
 
+                        //Adding a Command Bar\\
+                        RadCommandBar radCommandBar = new RadCommandBar();
+                        page.Controls.Add(radCommandBar);
+                        radCommandBar.Dock = DockStyle.Fill;
+                        CommandBarRowElement row1 = new CommandBarRowElement();
+                        radCommandBar.Rows.Add(row1);
+                        CommandBarStripElement strip1 = new CommandBarStripElement();
+                        row1.Strips.Add(strip1);
+                        CommandBarLabel label = new CommandBarLabel();
+                        label.Text = "Group By:";
+                        label.Size = new Size(60,20);
+                        strip1.Items.Add(label);
+                        CommandBarDropDownList list = new CommandBarDropDownList();
+                        list.Items.Add("Designer");
+                        list.Items.Add("Approved");
+                        strip1.Items.Add(list);
+                        CommandBarSeparator seperator1 = new CommandBarSeparator();
+                        strip1.Items.Add(seperator1);
+                        CommandBarToggleButton btnListView = new CommandBarToggleButton();
+                        Bitmap listviewImage = new Bitmap(Properties.Resources.ListView, new Size(24, 24));
+                        btnListView.Image = listviewImage;
+                        btnListView.ToolTipText = "List View";
+                        strip1.Items.Add(btnListView);
+                        CommandBarToggleButton btnIconView = new CommandBarToggleButton();
+                        Bitmap iconviewImage = new Bitmap(Properties.Resources.IconView, new Size(24, 24));
+                        btnIconView.Image = iconviewImage;
+                        btnIconView.ToolTipText = "Icon View";
+                        strip1.Items.Add(btnIconView);
+                        CommandBarToggleButton btnDetailsView = new CommandBarToggleButton();
+                        btnDetailsView.ToolTipText = "Details View";
+                        Bitmap detailsviewImage = new Bitmap(Properties.Resources.DetailsView, new Size(24, 24));
+                        btnDetailsView.Image = detailsviewImage;
+                        strip1.Items.Add(btnDetailsView);
+                        CommandBarSeparator seperator2 = new CommandBarSeparator();
+                        strip1.Items.Add(seperator2);
+                        CommandBarTextBox tbFilter = new CommandBarTextBox();
+                        tbFilter.Size = new Size(150, 20);
+                        strip1.Items.Add(tbFilter);
+
                         foreach (DataRow row in foundRows)
                         {
                             
                             if (row["Logo_Group"].ToString() == page.Text)
                             {
-                                if (logoImage != null)
-                                {
-                                    logoImage = null;
-                                    logoImage = Image.FromFile(row["Logo_Image_Path"].ToString());
-                                }
-                                else
-                                {
-                                    logoImage = Image.FromFile(row["Logo_Image_Path"].ToString());
-                                }
-
-                                dataSource.Add(new Logo(1, row["Logo_Name"].ToString(), row["Drawn_By"].ToString(), row["Logo_Group"].ToString(), row["Description"].ToString(), row["Logo_Image_Path"].ToString(), false, false, false, false, false, "", ""));
+                                dataSource.Add(new Logo(1, row["Logo_Name"].ToString(), row["Drawn_By"].ToString(), row["Logo_Group"].ToString(), row["Description"].ToString(), row["Logo_Image_Path"].ToString(), false, false, false, false, false, "", row["Logo_File_Path"].ToString()));
 
                                 page.Controls.Add(listView);
-                                storeLogo.Rows.Add(row["Drawn_By"].ToString(), row["Description"].ToString());
+                                //storeLogo.Rows.Add(row["Drawn_By"].ToString(), row["Description"].ToString());
+                                currentListView.Name = row["Logo_Group"].ToString();
+                                listViews.Add(currentListView);
+                                listView.Name = row["Logo_Group"].ToString();
                             }
                         }
                     }
                 }
             }
 
-            logoDataSet.Tables.Add(storeLogo);
+            //logoDataSet.Tables.Add(storeLogo);
         }
 
-        public RadListView currentListView;
         void Logo_ItemData(object sender, ListViewItemEventArgs e)
         {
             if (currentListView.ViewType == ListViewType.ListView)
             {
-                e.Item.Image = logoImage;
+                string imagePath = ((Logo)e.Item.DataBoundItem).LogoImagePath;
+                using (FileStream stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                {
+                    e.Item.Image = Image.FromStream(stream);
+                    stream.Dispose();
+                }
 
             }
         }
 
         void Logo_VisualItemFormatting(object sender, ListViewVisualItemEventArgs e)
         {
+            e.VisualItem.Margin = new Padding(5, 5, 5, 5);
+
             e.VisualItem.ImageLayout = ImageLayout.Zoom;
             string approved;
 
@@ -382,6 +586,7 @@ namespace RhinoDek2.Pages
             _threeSixteenth = ThreeSixteenth;
             _forth = Forth;
             _laser = Laser;
+            _logoFilePath = logoFilePath;
         }
 
         public int LogoID

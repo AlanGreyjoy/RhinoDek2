@@ -59,6 +59,7 @@
             this.radLabel6 = new Telerik.WinControls.UI.RadLabel();
             this.radContextMenu1 = new Telerik.WinControls.UI.RadContextMenu(this.components);
             this.rhinoDekDataSet1 = new RhinoDek2.RhinoDekDataSet();
+            this.logoContextMenu = new Telerik.WinControls.UI.RadContextMenu(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.radPageView1)).BeginInit();
             this.radPageView1.SuspendLayout();
             this.AddLogo.SuspendLayout();
@@ -103,7 +104,7 @@
             this.radPageView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.radPageView1.Location = new System.Drawing.Point(0, 0);
             this.radPageView1.Name = "radPageView1";
-            this.radPageView1.SelectedPage = this.AddLogo;
+            this.radPageView1.SelectedPage = this.GroupsTitle;
             this.radPageView1.Size = new System.Drawing.Size(1010, 651);
             this.radPageView1.TabIndex = 0;
             this.radPageView1.Text = "Add Group";
@@ -179,7 +180,7 @@
             this.dropDownGroups.Location = new System.Drawing.Point(287, 242);
             this.dropDownGroups.Name = "dropDownGroups";
             this.dropDownGroups.Size = new System.Drawing.Size(254, 30);
-            this.dropDownGroups.TabIndex = 25;
+            this.dropDownGroups.TabIndex = 3;
             // 
             // radLabel7
             // 
@@ -225,7 +226,7 @@
             this.tbDrawnBy.Location = new System.Drawing.Point(284, 175);
             this.tbDrawnBy.Name = "tbDrawnBy";
             this.tbDrawnBy.Size = new System.Drawing.Size(394, 30);
-            this.tbDrawnBy.TabIndex = 19;
+            this.tbDrawnBy.TabIndex = 2;
             // 
             // radLabel5
             // 
@@ -241,7 +242,7 @@
             this.taDescription.Location = new System.Drawing.Point(284, 309);
             this.taDescription.Name = "taDescription";
             this.taDescription.Size = new System.Drawing.Size(394, 172);
-            this.taDescription.TabIndex = 21;
+            this.taDescription.TabIndex = 4;
             // 
             // radLabel4
             // 
@@ -249,7 +250,7 @@
             this.radLabel4.Location = new System.Drawing.Point(284, 77);
             this.radLabel4.Name = "radLabel4";
             this.radLabel4.Size = new System.Drawing.Size(50, 25);
-            this.radLabel4.TabIndex = 17;
+            this.radLabel4.TabIndex = 0;
             this.radLabel4.Text = "Name";
             // 
             // checkLaser
@@ -293,7 +294,7 @@
             this.tbLogoName.Location = new System.Drawing.Point(284, 108);
             this.tbLogoName.Name = "tbLogoName";
             this.tbLogoName.Size = new System.Drawing.Size(394, 30);
-            this.tbLogoName.TabIndex = 17;
+            this.tbLogoName.TabIndex = 1;
             // 
             // radLabel2
             // 
@@ -310,7 +311,7 @@
             this.btnSubmitLogo.Location = new System.Drawing.Point(284, 487);
             this.btnSubmitLogo.Name = "btnSubmitLogo";
             this.btnSubmitLogo.Size = new System.Drawing.Size(109, 30);
-            this.btnSubmitLogo.TabIndex = 14;
+            this.btnSubmitLogo.TabIndex = 5;
             this.btnSubmitLogo.Text = "Submit";
             this.btnSubmitLogo.ThemeName = "TelerikMetroBlue";
             this.btnSubmitLogo.Click += new System.EventHandler(this.btnSubmitLogo_Click);
@@ -468,5 +469,6 @@
         private RhinoDekDataSet rhinoDekDataSet1;
         private Telerik.WinControls.UI.RadContextMenu radContextMenu1;
         private Telerik.WinControls.UI.RadDropDownList dropDownGroups;
+        private Telerik.WinControls.UI.RadContextMenu logoContextMenu;
     }
 }
